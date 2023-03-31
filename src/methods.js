@@ -12,9 +12,10 @@ function encrypt(message, key) {
             for (let j = 0; j < chars.length; j++)
                 output += mappings[message[i].toUpperCase()][chars[j]];
             random = seedrandom(random());
+            output += " ";
         }
         else if (message[i] == ' ' || message[i] == '\n')
-            output += '___';
+            output += '___ ';
         else 
             output += message[i] + message[i] + message[i];
     }
@@ -30,9 +31,17 @@ function decrypt(message, key) {
     let output = '';
     let i = 0;
     while (i < message.length) {
-        if (!message[i].match(/[a-z]/i)) {
+        if (message[i].match(/\s/)) {
+            i++;
+        }
+        else if (!message[i].match(/[a-z]/i)) {
             if (i != 0 && message[i] != message[i - 1])
-                output += message[i];
+            {   
+                if (message[i] == '_')
+                    output += " ";
+                else
+                    output += message[i];
+            }
             i++;
         }
         else {
