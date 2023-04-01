@@ -1,9 +1,3 @@
-/* 
-TODO:
-Styling
-
-*/
-
 import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import { Worker, createWorker } from 'tesseract.js'
@@ -89,8 +83,10 @@ function App() {
           }
         }} />
       }
-      <textarea ref={inputRef} name="input" id="input" rows="10" defaultValue={"Secret Message"}></textarea>
-      <textarea ref={keyRef} name="key" id="key" rows="2" defaultValue="Secret Key"></textarea>
+      <label htmlFor="input"> Message </label>
+      <textarea ref={inputRef} name="input" id="input" rows="10" defaultValue={""}></textarea>
+      <label htmlFor="key"> Secret Key </label>
+      <textarea ref={keyRef} name="key" id="key" rows="2" defaultValue=""></textarea>
       <div className="buttons">
         <button onClick={() => {
           outputRef.current.defaultValue = encrypt(inputRef.current.value, keyRef.current.value);
@@ -99,6 +95,7 @@ function App() {
           outputRef.current.defaultValue = decrypt(inputRef.current.value, keyRef.current.value);
         }}> Decipher </button>
       </div>
+      <label htmlFor="output"> Output </label>
       <textarea ref={outputRef} name="output" id="output" rows="10" readOnly></textarea>
       <button onClick={() => {
         if (outputRef.current.defaultValue.length > 0) {
