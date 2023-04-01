@@ -9,6 +9,7 @@ import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import { Worker, createWorker } from 'tesseract.js'
 import { encrypt, decrypt } from './methods';
+import heic2any from 'heic2any';
 
 function App() {
   const [image, setImage] = useState(null);
@@ -54,11 +55,15 @@ function App() {
 
   return (
     <div className='main'>
-      <input type="file" multiple="multiple" id='image' name='image' accept='image/*' ref={fileSelectRef} onChange={(e) => {
+      <input type="file" multiple="multiple" id='image' name='image' accept='image/*,.heic' ref={fileSelectRef} onChange={async (e) => {
         if (e.target.files.length != 0) {
           let image = [];
-          for (let i = 0; i < e.target.files.length; i++)
-            image.push(URL.createObjectURL(e.target.files[i]));
+          for (let i = 0; i < e.target.files.length; i++) {
+            let blob = e.target.files[i];
+            if (blob.name.split('.').pop() == 'heic')
+              blob = await heic2any( {blob} );
+            image.push(URL.createObjectURL(blob));
+          }
           setImage(image);
         }
       }} />
