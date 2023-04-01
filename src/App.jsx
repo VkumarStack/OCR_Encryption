@@ -1,6 +1,5 @@
 /* 
 TODO:
-PDF conversion
 Styling
 
 */
@@ -10,10 +9,12 @@ import './App.css'
 import { Worker, createWorker } from 'tesseract.js'
 import { encrypt, decrypt } from './methods';
 import heic2any from 'heic2any';
+import { isMobile } from 'react-device-detect';
+import jsPDF from 'jspdf';
+import "./OldNewspaperTypes-normal"
 
 function App() {
   const [image, setImage] = useState(null);
-  const [recognizedText, setRecognizedText] = useState("");
   const workerRef = useRef(null);
   const fileSelectRef = useRef(null);
   const inputRef = useRef(null);
@@ -47,7 +48,7 @@ function App() {
         for (let i = 0; i < image.length; i++) {
           output += (await workerRef.current.recognize(image[i])).data.text;
         } 
-        setRecognizedText(output);
+        inputRef.current.value = output.replace(/\n/g, ' ');
       }
     }
     recognize();
@@ -55,20 +56,22 @@ function App() {
 
   return (
     <div className='main'>
-      <input type="file" multiple="multiple" id='image' name='image' accept='image/*,.heic' ref={fileSelectRef} onChange={async (e) => {
-        if (e.target.files.length != 0) {
-          let image = [];
-          for (let i = 0; i < e.target.files.length; i++) {
-            let blob = e.target.files[i];
-            let name = blob.name.split('.').pop().toLowerCase();
-            if (name == 'heic' || name == 'heif')
-              blob = await heic2any( {blob} );
-            image.push(URL.createObjectURL(blob));
+      {!isMobile && 
+        <input type="file" multiple="multiple" id='image' name='image' accept='image/*,.heic' ref={fileSelectRef} onChange={async (e) => {
+          if (e.target.files.length != 0) {
+            let image = [];
+            for (let i = 0; i < e.target.files.length; i++) {
+              let blob = e.target.files[i];
+              let name = blob.name.split('.').pop().toLowerCase();
+              if (name == 'heic' || name == 'heif')
+                blob = await heic2any( {blob} );
+              image.push(URL.createObjectURL(blob));
+            }
+            setImage(image);
           }
-          setImage(image);
-        }
-      }} />
-      <textarea ref={inputRef} name="input" id="input" rows="10" defaultValue={recognizedText.replace(/\n/g, ' ')}></textarea>
+        }} />
+      }
+      <textarea ref={inputRef} name="input" id="input" rows="10" defaultValue={"Secret Message"}></textarea>
       <textarea ref={keyRef} name="key" id="key" rows="2" defaultValue="Secret Key"></textarea>
       <div className="buttons">
         <button onClick={() => {
@@ -78,7 +81,16 @@ function App() {
           outputRef.current.defaultValue = decrypt(inputRef.current.value, keyRef.current.value);
         }}> Decipher </button>
       </div>
-      <textarea ref={outputRef} name="output" id="output" rows="10" readOnly defaultValue={""}></textarea>
+      <textarea ref={outputRef} name="output" id="output" rows="10" readOnly></textarea>
+      <button onClick={() => {
+        if (outputRef.current.defaultValue.length > 0) {
+          const doc = new jsPDF();
+          doc.setFont('OldNewspaperTypes', 'normal');
+          doc.text(outputRef.current.defaultValue, 10, 10);
+          doc.save("output.pdf");
+          console.log(doc);
+        }
+      }}> Save as PDF </button>
     </div>
   )
 }
