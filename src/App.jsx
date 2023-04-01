@@ -60,7 +60,8 @@ function App() {
           let image = [];
           for (let i = 0; i < e.target.files.length; i++) {
             let blob = e.target.files[i];
-            if (blob.name.split('.').pop().toLowerCase() == 'heic')
+            let name = blob.name.split('.').pop().toLowerCase();
+            if (name == 'heic' || name == 'heif')
               blob = await heic2any( {blob} );
             image.push(URL.createObjectURL(blob));
           }
