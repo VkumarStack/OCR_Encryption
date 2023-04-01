@@ -1,7 +1,5 @@
 /* 
 TODO:
-Special character for newlines as opposed to space in the encrypt 
-Encryption formatting check
 PDF conversion
 Styling
 

@@ -1,5 +1,15 @@
 import seedrandom from "seedrandom";
 
+/* 
+This is a very basic encryption scheme, though it is meant to be OCR-friendly by using some redundancy
+The input message is converted to uppercase and each character of the input (which is only in uppercase) 
+is mapped to one random uppercase alphabetical character and one random lowercase alphabetical character 
+(they are not necessarily the same character). Non alphabetical characters are not translated, with the
+exception of spaces and newlines, which are translated into underscores (_) and tildas (~) respectively.
+Each character is then repeated three times, so that if the OCR fails to recognize one of them, the other 
+two can be used to account for the failure. Which letters map to which and the ordering of the three 
+characters for each letter is determined by the key, which acts as a seed to the random generator. 
+*/
 function encrypt(message, key) {
     let { mappings } = mapLetters(key);
 
@@ -12,54 +22,65 @@ function encrypt(message, key) {
             for (let j = 0; j < chars.length; j++)
                 output += mappings[message[i].toUpperCase()][chars[j]];
             random = seedrandom(random());
-            output += " ";
         }
-        else if (message[i] == ' ' || message[i] == '\n')
-            output += '___ ';
+        else if (message[i] == ' ')
+            output += '___';
+        else if (message[i] == '\n')
+            output += '~~~';
         else 
             output += message[i] + message[i] + message[i];
+        output += ' ';
     }
     return output;
 }
 
-// If alphabetical character, scan the three
-// Otherwise, record the first non-alphabetical character, determine what it is, and then skip ahead 
-//(certain non-alphabetical characters like underscores may be combined by the OCR)
+/* 
+Scans through the message, using the key to construct a reverse mapping table and then check each three-character 
+sequence for a translation. If there are differences in translation within each three-character sequence, then 
+whichever letter a majority of the characters translate to is the one to be added to the output.
+*/
 function decrypt(message, key) {
     let { reverseMappings } = mapLetters(key);
 
     let output = '';
     let i = 0;
+
     while (i < message.length) {
-        if (message[i].match(/\s/)) {
+        if (message[i].match(/\s/)) 
             i++;
-        }
-        else if (!message[i].match(/[a-z]/i)) {
-            if (i != 0 && message[i] != message[i - 1])
-            {   
-                if (message[i] == '_')
-                    output += " ";
-                else
-                    output += message[i];
-            }
-            i++;
-        }
         else {
-            if (i + 2 < message.length && message.substring(i, i + 3).match(/[a-z]/i)) {
-                let c1 = reverseMappings[message[i]];
-                let c2 = reverseMappings[message[i + 1]];
-                let c3 = reverseMappings[message[i + 2]];
-                if (c1 == c2 || c1 == c3)
-                    output += c1;
-                else if (c2 == c3)
-                    output += c2;
-                else 
-                    output += c1;
+            let hash = {};
+            // Scan ahead, accounts for if the OCR fails to recognize a character (deletion) or fails to recognize a space
+            let j = i;
+            while (j < message.length && !message[j].match(/\s/) && j < i + 3) {
+                let ch;
+                if (message[j] in reverseMappings)
+                    ch = reverseMappings[message[j]];
+                else
+                    ch = message[j];
+                
+                if (ch in hash)
+                    hash[ch]++;
+                else
+                    hash[ch] = 1;
+                
+                j++;
             }
-            i = i + 3;
+            let items = Object.keys(hash).map((key) => { return [key, hash[key]] });
+            items.sort((first, second) => { return first[1] - second[1] });
+            // Output is the highest recurring character
+            let ch = items[items.length - 1][0];
+            if (ch == '_')
+                output += ' ';
+            else if (ch == '~')
+                output += '\n';
+            else 
+                output += ch;
+
+            i = j;
         }
     }
-
+    
     return output;
 }
 
