@@ -1,0 +1,2 @@
+# OCR Encryption Applet
+This is an application meant to leverage Tesseract.js, an optical character recognition library, to read text and perform a (**very**) simple public key cryptographic cipher or decipher on the recognized message. The option to input an image to be recognized does not work with images taken on an iPhone or any Apple device due to issues with the conversion from the HEIC format to JPEG/PNG format that impede the character recognition.
